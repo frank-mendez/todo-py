@@ -1,19 +1,23 @@
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime, Enum
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import enum
-from .database import Base
+from database import Base  # Changed from relative to absolute import
 
 class TaskStatus(enum.Enum):
+    """Enum for task status"""
     todo = "todo"
     in_progress = "in_progress"
     completed = "completed"
 
 class TaskPriority(enum.Enum):
+    """Enum for task priority"""
     low = "low"
     medium = "medium"
     high = "high"
 
 class User(Base):
+    """User model"""
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -23,7 +27,12 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
+    # Relationships
+    tasks = relationship("Task", back_populates="user")
+    categories = relationship("Category", back_populates="user")
+
 class Task(Base):
+    """Task model"""
     __tablename__ = "tasks"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -37,7 +46,12 @@ class Task(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
+    # Relationships
+    user = relationship("User", back_populates="tasks")
+    category = relationship("Category", back_populates="tasks")
+
 class Category(Base):
+    """Category model"""
     __tablename__ = "categories"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -46,3 +60,7 @@ class Category(Base):
     user_id = Column(Integer, ForeignKey("users.id"))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    user = relationship("User", back_populates="categories")
+    tasks = relationship("Task", back_populates="category")
