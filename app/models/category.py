@@ -1,19 +1,16 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy import Column, String, Integer, ForeignKey
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
-from database import Base  # Changed from relative to absolute import
+from app.models.base import BaseModel
 
-class Category(Base):
-    """Category model"""
+class Category(BaseModel):
     __tablename__ = "categories"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True)
-    color = Column(String, default="#000000")
-    user_id = Column(Integer, ForeignKey("users.id"))
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-
+    name = Column(String, nullable=False)
+    description = Column(String)
+    
+    # Foreign Keys
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    
     # Relationships
-    user = relationship("User", back_populates="categories")
+    owner = relationship("User", back_populates="categories")
     tasks = relationship("Task", back_populates="category")

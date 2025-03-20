@@ -1,10 +1,6 @@
-from .user import User
-from .task import Task
-from .category import Category
+from app.models.base import Base, BaseModel, TimestampMixin
+from app.models.user import User
+from app.models.task import Task
+from app.models.category import Category
 
-__all__ = [
-    # Database models
-    "User",
-    "Task", 
-    "Category"
-]
+__all__ = ["Base", "BaseModel", "TimestampMixin", "User", "Task", "Category"]

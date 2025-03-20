@@ -1,19 +1,16 @@
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Boolean, Column, String
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
-from database import Base  # Changed from relative to absolute import
+from app.models.base import BaseModel
 
-class User(Base):
-    """User model"""
+class User(BaseModel):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, unique=True, index=True)
-    username = Column(String, unique=True, index=True)
-    hashed_password = Column(String)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    email = Column(String, unique=True, index=True, nullable=False)
+    username = Column(String, unique=True, index=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
+    full_name = Column(String)
+    disabled = Column(Boolean, default=False)
 
     # Relationships
-    tasks = relationship("Task", back_populates="user")
-    categories = relationship("Category", back_populates="user")
+    tasks = relationship("Task", back_populates="owner", cascade="all, delete-orphan")
+    categories = relationship("Category", back_populates="owner", cascade="all, delete-orphan")

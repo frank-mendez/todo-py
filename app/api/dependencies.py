@@ -1,58 +1,83 @@
-from typing import Annotated, Generator
+from typing import Generator, Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
 from sqlalchemy.orm import Session
-from datetime import datetime, timedelta
-from passlib.context import CryptContext
-
+from app.core.security import verify_token, get_token_data
 from app.core.config import settings
-from app.database import SessionLocal
-from app.models import User
+from app.core.logging import get_logger
+from app.api.errors import UnauthorizedError
+from app.db.session import SessionLocal
 
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+logger = get_logger(__name__)
 
-# OAuth2 scheme for token authentication
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl=f"{settings.API_V1_STR}/auth/token"
+)
 
+# Database dependency
 def get_db() -> Generator[Session, None, None]:
-    """Dependency for getting DB session"""
+    """Get database session."""
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
 
-def get_current_user(
-    token: Annotated[str, Depends(oauth2_scheme)],
-    db: Session = Depends(get_db)
-) -> User:
-    """Dependency for getting current authenticated user"""
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    
+async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
+    """
+    Validate access token and return current user.
+    """
     try:
-        payload = jwt.decode(
-            token, 
-            settings.SECRET_KEY, 
-            algorithms=[settings.ALGORITHM]
-        )
-        username: str = payload.get("sub")
-        if username is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-        
-    user = db.query(User).filter(User.username == username).first()
-    if user is None:
-        raise credentials_exception
-    return user
+        username = get_token_data(token)
+        if not username:
+            raise UnauthorizedError("Could not validate credentials")
+        return {"username": username}
+    except Exception as e:
+        logger.error(f"Token validation error: {str(e)}")
+        raise UnauthorizedError("Could not validate credentials")
 
-# DB Session dependency
-DB = Annotated[Session, Depends(get_db)]
-# Current user dependency
-CurrentUser = Annotated[User, Depends(get_current_user)]
+async def get_current_active_user(
+    current_user: dict = Depends(get_current_user)
+) -> dict:
+    """
+    Get current active user.
+    """
+    return current_user
+
+def get_token_header(x_token: str = Depends(oauth2_scheme)) -> str:
+    """
+    Dependency for token header validation.
+    """
+    return x_token
+
+class RateLimiter:
+    """
+    Basic rate limiting implementation.
+    Should be replaced with proper rate limiting in production.
+    """
+    def __init__(self, requests_per_minute: int = 60):
+        self.requests_per_minute = requests_per_minute
+        # In production, use Redis or similar for rate limiting
+        self._requests = {}
+
+    async def check_rate_limit(self, user_id: str) -> bool:
+        """
+        Check if user has exceeded rate limit.
+        """
+        # Implement proper rate limiting logic here
+        return True
+
+rate_limiter = RateLimiter()
+
+async def check_rate_limit(
+    current_user: dict = Depends(get_current_active_user)
+) -> None:
+    """
+    Rate limiting dependency.
+    """
+    is_allowed = await rate_limiter.check_rate_limit(current_user["username"])
+    if not is_allowed:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Rate limit exceeded"
+        )
