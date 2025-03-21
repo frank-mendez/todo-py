@@ -279,3 +279,100 @@ todo_api/
 ├── Dockerfile
 └── README.md
 ```
+
+## 9. Getting Started
+
+### 9.1 Prerequisites
+
+- Python 3.11 or higher
+- PostgreSQL 14 or higher
+- pip (Python package installer)
+
+### 9.2 Installation
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/yourusername/todo-py.git
+cd todo-py
+```
+
+2. Create and activate virtual environment:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+```
+
+3. Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+4. Create `.env` file:
+
+```bash
+cp .env.example .env
+```
+
+5. Update `.env` with your database credentials:
+
+```ini
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=todo
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+```
+
+### 9.3 Database Setup
+
+1. Create PostgreSQL database:
+
+```bash
+createdb todo
+```
+
+2. Run database migrations:
+
+```bash
+# Initialize Alembic
+alembic init alembic
+
+# Generate migration
+alembic revision --autogenerate -m "Initial migration"
+
+# Apply migration
+alembic upgrade head
+```
+
+### 9.4 Running the Server
+
+1. Start the development server:
+
+```bash
+uvicorn app.main:app --reload --port 8000
+```
+
+2. Access the API:
+
+- API Documentation: http://localhost:8000/docs
+- Alternative Documentation: http://localhost:8000/redoc
+- API Base URL: http://localhost:8000/api/v1
+
+### 9.5 Development Commands
+
+```bash
+# Run tests
+pytest
+
+# Check code style
+flake8
+
+# Format code
+black .
+
+# Generate API documentation
+python scripts/generate_openapi.py
+```

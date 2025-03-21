@@ -60,4 +60,4 @@ alembic/versions/*.py
 !alembic/versions/.gitkeep
 
 #IDE
-.vscode/
+.vscode
