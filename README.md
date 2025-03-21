@@ -92,37 +92,44 @@ This document outlines the requirements for a to-do application with separate re
 
 ### 5.1 Authentication Endpoints
 
-- `POST /api/auth/register` - Register a new user
-- `POST /api/auth/login` - Authenticate a user and receive token
-- `POST /api/auth/refresh` - Refresh authentication token
-- `POST /api/auth/password-reset` - Request password reset
-- `POST /api/auth/password-reset/confirm` - Confirm password reset
-- `GET /api/auth/user` - Get current user information
-- `PATCH /api/auth/user` - Update user information
+- `POST /api/v1/auth/token` - Login and get access token
+- `GET /api/v1/auth/me` - Get current user information
 
-### 5.2 Task Endpoints
+### 5.2 User Endpoints
 
-- `GET /api/tasks` - List all tasks for the authenticated user
-- `POST /api/tasks` - Create a new task
-- `GET /api/tasks/{id}` - Retrieve a specific task
-- `PUT /api/tasks/{id}` - Update a specific task
-- `DELETE /api/tasks/{id}` - Delete a specific task
-- `PATCH /api/tasks/{id}/status` - Update task status
-- `GET /api/tasks/search` - Search for tasks
+- `POST /api/v1/users` - Register a new user
+- `GET /api/v1/users/me` - Get current user profile
+- `PUT /api/v1/users/me` - Update current user profile
+- `DELETE /api/v1/users/me` - Delete current user account
 
-### 5.3 Category Endpoints
+### 5.3 Task Endpoints
 
-- `GET /api/categories` - List all categories
-- `POST /api/categories` - Create a new category
-- `GET /api/categories/{id}` - Retrieve a specific category
-- `PUT /api/categories/{id}` - Update a specific category
-- `DELETE /api/categories/{id}` - Delete a specific category
-- `GET /api/categories/{id}/tasks` - Get all tasks in a category
+- `GET /api/v1/tasks` - List all tasks for current user
+- `POST /api/v1/tasks` - Create a new task
+- `GET /api/v1/tasks/{task_id}` - Get task details
+- `PUT /api/v1/tasks/{task_id}` - Update a task
+- `DELETE /api/v1/tasks/{task_id}` - Delete a task
+- `PATCH /api/v1/tasks/{task_id}/status` - Update task status
 
-### 5.4 Statistics Endpoints
+### 5.4 Category Endpoints
 
-- `GET /api/stats/overview` - Get overview statistics (counts by status)
-- `GET /api/stats/completion` - Get task completion statistics
+- `GET /api/v1/categories` - List all categories
+- `POST /api/v1/categories` - Create a new category
+- `GET /api/v1/categories/{category_id}` - Get category details
+- `PUT /api/v1/categories/{category_id}` - Update a category
+- `DELETE /api/v1/categories/{category_id}` - Delete a category
+- `GET /api/v1/categories/{category_id}/tasks` - List tasks in category
+
+All endpoints except authentication require a valid JWT token in the Authorization header:
+
+```
+Authorization: Bearer <token>
+```
+
+Detailed API documentation is available at:
+
+- Swagger UI: `/docs`
+- ReDoc: `/redoc`
 
 ## 6. Data Models
 
