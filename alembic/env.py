@@ -4,23 +4,23 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from alembic import context
+from dotenv import load_dotenv
 
 # Add the parent directory to Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-# Import the SQLAlchemy declarative Base
-from app.core.config import settings
-from app.models import Base
+# Load environment variables
+load_dotenv()
+
+# Import models
+from app.models import Base, User, Task, Category
 
 # this is the Alembic Config object
 config = context.config
 
-# Interpret the config file for Python logging
-if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
-
-# Set sqlalchemy.url in alembic.ini
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+# Set sqlalchemy.url
+DATABASE_URL = f"postgresql://{os.getenv('DATABASE_USER')}:{os.getenv('DATABASE_PASSWORD')}@{os.getenv('DATABASE_HOST')}:{os.getenv('DATABASE_PORT')}/{os.getenv('DATABASE_NAME')}"
+config.set_main_option("sqlalchemy.url", DATABASE_URL)
 
 target_metadata = Base.metadata
 
