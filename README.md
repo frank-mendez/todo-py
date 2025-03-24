@@ -326,11 +326,11 @@ cp .env.example .env
 5. Update `.env` with your database credentials:
 
 ```ini
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_DB=todo
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
+DATABASE_USER=postgres
+DATABASE_PASSWORD=postgres
+DATABASE_DB=todo
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
 ```
 
 ### 9.3 Database Setup

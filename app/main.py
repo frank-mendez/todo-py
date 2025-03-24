@@ -38,9 +38,12 @@ async def startup_event():
     from scripts.create_db import create_database
     
     try:
-        # Ensure database exists
         create_database()
-        
+    except Exception as e:
+        logger.error(f"Error during startup: {str(e)}")
+        raise
+
+    try:
         db = SessionLocal()
         try:
             init_db(db)

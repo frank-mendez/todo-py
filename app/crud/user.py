@@ -19,7 +19,9 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
     def authenticate(self, db: Session, *, username: str, password: str) -> Optional[User]:
         user = self.get_by_username(db, username=username)
-        if not user or not verify_password(password, user.hashed_password):
+        if not user:
+            return None
+        if not verify_password(password, user.hashed_password):
             return None
         return user
 
@@ -34,7 +36,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             username=obj_in.username,
             full_name=obj_in.full_name,
             hashed_password=get_password_hash(obj_in.password),
-            disabled=False
+            is_active=True  # Changed from disabled=False
         )
         
         try:
@@ -49,7 +51,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
     def is_active(self, user: User) -> bool:
         """Check if user is active."""
-        return not user.disabled
+        return user.is_active  # Changed from not user.disabled
 
     def get_user_by_token(self, db: Session, token: str) -> Optional[User]:
         """Get user by JWT token."""
@@ -57,7 +59,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             payload = jwt.decode(
                 token, 
                 settings.SECRET_KEY, 
-                algorithms=[settings.ALGORITHM]
+                algorithms=[settings.JWT_ALGORITHM]  # Changed from ALGORITHM to JWT_ALGORITHM
             )
             username: str = payload.get("sub")
             if username is None:

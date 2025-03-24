@@ -1,42 +1,37 @@
-from pydantic_settings import BaseSettings
-from pydantic import EmailStr, field_validator, computed_field
-from typing import Optional, Dict, Any, Union, List
+from typing import Any, Dict, Optional, List, Union
+from pydantic import PostgresDsn, EmailStr, Field, model_validator, computed_field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from dotenv import load_dotenv
+import os
 from pathlib import Path
 
+load_dotenv()
+
 class Settings(BaseSettings):
-    # API Settings
-    API_V1_STR: str = "/api/v1"
+    # API
+    SECRET_KEY: str = Field(default=os.getenv("SECRET_KEY"))
     PROJECT_NAME: str = "Todo API"
+    API_V1_STR: str = "/api/v1"
     VERSION: str = "1.0.0"
     DESCRIPTION: str = "A FastAPI-based Todo application"
 
     # Security Settings
-    SECRET_KEY: str = "your-secret-key-here"  # Change in production!
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     JWT_ALGORITHM: str = "HS256"
 
     # CORS Settings
     BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:8000"]
 
-    # Database Settings
-    DATABASE_TYPE: str = "postgresql"
-    DATABASE_HOST: str = "localhost"
-    DATABASE_PORT: str = "5432"
-    DATABASE_USER: str = "postgres"
-    DATABASE_PASSWORD: str = "postgres"
-    DATABASE_NAME: str = "todo"
+    # Database
+    POSTGRES_SERVER: str = Field(default=os.getenv("DATABASE_HOST", "localhost"))
+    POSTGRES_USER: str = Field(default=os.getenv("DATABASE_USER", "postgres"))
+    POSTGRES_PASSWORD: str = Field(default=os.getenv("DATABASE_PASSWORD", "postgres"))
+    POSTGRES_PORT: str = Field(default=os.getenv("DATABASE_PORT", "5432"))
+    POSTGRES_DB: str = Field(default=os.getenv("DATABASE_NAME", "todo"))
 
-    @computed_field
     @property
     def DATABASE_URL(self) -> str:
-        """Construct database URL from settings."""
-        if self.DATABASE_TYPE == "sqlite":
-            return f"sqlite:///./todo.db"
-        return (
-            f"{self.DATABASE_TYPE}://{self.DATABASE_USER}:"
-            f"{self.DATABASE_PASSWORD}@{self.DATABASE_HOST}:"
-            f"{self.DATABASE_PORT}/{self.DATABASE_NAME}"
-        )
+        return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 
     # Email Settings
     SMTP_TLS: bool = True
@@ -60,18 +55,19 @@ class Settings(BaseSettings):
     SERVER_PORT: int = 8000
     SERVER_RELOAD: bool = True
 
-    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
-    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
-        if isinstance(v, str):
-            return [i.strip() for i in v.split(",")]
-        return v
+    @model_validator(mode='before')
+    @classmethod
+    def validate_cors_origins(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        if isinstance(values.get('BACKEND_CORS_ORIGINS'), str):
+            values['BACKEND_CORS_ORIGINS'] = [i.strip() for i in values['BACKEND_CORS_ORIGINS'].split(",")]
+        return values
 
-    model_config = {
-        "case_sensitive": True,
-        "env_file": ".env",
-        "env_file_encoding": "utf-8",
-        "extra": "ignore"
-    }
+    model_config = SettingsConfigDict(
+        case_sensitive=True,
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore"
+    )
 
 # Create global settings instance
 settings = Settings()

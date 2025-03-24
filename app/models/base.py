@@ -1,41 +1,14 @@
+from sqlalchemy import Column, DateTime
+from sqlalchemy.orm import DeclarativeBase, Mapped
 from datetime import datetime
-from typing import Any
-from sqlalchemy import Column, Integer, DateTime
-from sqlalchemy.ext.declarative import as_declarative, declared_attr
-from sqlalchemy.sql import func
 
-@as_declarative()
-class Base:
-    id: Any
-    __name__: str
+class Base(DeclarativeBase):
+    """Base class for all models"""
+    pass
 
-    # Generate __tablename__ automatically
-    @declared_attr
-    def __tablename__(cls) -> str:
-        return cls.__name__.lower()
-
-class TimestampMixin:
-    """Timestamp mixin for models."""
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
-
-class BaseModel(Base, TimestampMixin):
-    """Base model class that includes common fields."""
+class TimestampedBase(Base):
+    """Base class for all models with timestamp fields"""
     __abstract__ = True
 
-    id = Column(Integer, primary_key=True, index=True)
-
-    def __repr__(self) -> str:
-        return f"<{self.__class__.__name__}(id={self.id})>"
-
-    def dict(self) -> dict:
-        """Convert model to dictionary."""
-        return {
-            column.name: getattr(self, column.name)
-            for column in self.__table__.columns
-        }
-
-    @classmethod
-    def from_dict(cls, data: dict) -> "BaseModel":
-        """Create model instance from dictionary."""
-        return cls(**data)
+    created_at: Mapped[datetime] = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: Mapped[datetime] = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)

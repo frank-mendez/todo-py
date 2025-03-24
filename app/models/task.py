@@ -1,12 +1,13 @@
-from sqlalchemy import Column, String, Boolean, Integer, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime, Text
 from sqlalchemy.orm import relationship
-from app.models.base import BaseModel  # Fix the import
+from app.models.base import TimestampedBase
 
-class Task(BaseModel):
+class Task(TimestampedBase):
     __tablename__ = "tasks"
 
-    title = Column(String, nullable=False)
-    description = Column(String)
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
     completed = Column(Boolean, default=False)
     due_date = Column(DateTime, nullable=True)
     
